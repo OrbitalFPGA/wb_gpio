@@ -8,18 +8,18 @@ module wb_gpio #(
         parameter logic[31:0] IP_DEVICE_ID = 32'h0001_0001,
         parameter logic[127:0] DEFAULT_GPIO_DIRECTION_FULL = 128'hFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF,
         parameter logic[127:0] DEFAULT_GPIO_OUTPUT_FULL = 128'h0000_0000_0000_0000_0000_0000_0000_0000,
-        localparam WB_SEL_WIDTH = WB_DATA_WIDTH / WB_DATA_GRANULARITY
+        parameter WB_SEL_WIDTH = WB_DATA_WIDTH / WB_DATA_GRANULARITY
 
     )
     (
-        input wire logic i_wb_clk,
-        input wire logic i_wb_rst,
-        input wire logic i_wb_cyc,
-        input wire logic i_wb_stb,
-        input wire logic i_wb_we,
-        input wire logic [WB_ADDRESS_WIDTH-1:0] i_wb_addr,
-        input wire logic [WB_DATA_WIDTH-1:0] i_wb_dat,
-        input wire logic [WB_SEL_WIDTH-1:0] i_wb_sel,
+        input logic i_wb_clk,
+        input logic i_wb_rst,
+        input logic i_wb_cyc,
+        input logic i_wb_stb,
+        input logic i_wb_we,
+        input logic [WB_ADDRESS_WIDTH-1:0] i_wb_addr,
+        input logic [WB_DATA_WIDTH-1:0] i_wb_dat,
+        input logic [WB_SEL_WIDTH-1:0] i_wb_sel,
         output logic[WB_DATA_WIDTH-1:0] o_wb_dat,
         output logic o_wb_stall,
         output logic o_wb_ack,
