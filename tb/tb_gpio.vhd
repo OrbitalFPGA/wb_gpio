@@ -146,6 +146,7 @@ begin
         -- write_register(GPIO_DIRECTION_OFFSET, all_output);
         change_direction(all_output);
         write_register(GPIO_DATA_OFFSET, x"AAAAAAAA"); -- alternating 1s and 0s
+        wait for 8 * CLK_PERIOD; -- Need to wait for data to go through syncronizer as GPIO_DATA_OFFSET reads from the pad
         read_register(GPIO_DATA_OFFSET, tmp);
         if (tmp /= x"AAAAAAAA") then
             print_time("ERROR: Output readback mismatch");
@@ -160,6 +161,8 @@ begin
 
         -- Attempt to write to input pins (should be ignored)
         write_register(GPIO_DATA_OFFSET, x"FFFFFFFF");
+
+        wait for 8 * CLK_PERIOD; -- Need to wait for data to go through syncronizer as GPIO_DATA_OFFSET reads from the pad
 
         -- Read data, only upper half should reflect outputs
         read_register(GPIO_DATA_OFFSET, tmp);
