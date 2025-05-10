@@ -208,10 +208,6 @@ module wb_subordinate_interface #(
                 ;
             16'h1C:
                 ;
-            16'h20:
-                ;
-            16'h24:
-                ;
             default:
                 current_dat = i_ip_rdata;
         endcase
