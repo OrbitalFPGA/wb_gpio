@@ -12,10 +12,10 @@ use ieee.std_logic_misc.all;
 
 entity gpio is
     generic (
-        WB_DATA_WIDTH               : integer                            := 32;
-        WB_REGISTER_ADDRESS_WIDTH   : integer                            := 16;
-        DEFAULT_GPIO_DIRECTION_FULL : std_logic_vector(127 - 1 downto 0) := (others => '1');
-        DEFAULT_GPIO_OUTPUT_FULL    : std_logic_vector(127 - 1 downto 0) := (others => '0')
+        WB_DATA_WIDTH               : integer                        := 32;
+        WB_REGISTER_ADDRESS_WIDTH   : integer                        := 16;
+        DEFAULT_GPIO_DIRECTION_FULL : std_logic_vector(127 downto 0) := (others => '1');
+        DEFAULT_GPIO_OUTPUT_FULL    : std_logic_vector(127 downto 0) := (others => '0')
     );
     port (
         i_clk   : in std_logic;
@@ -48,7 +48,10 @@ architecture rtl of gpio is
     signal gpio_change                            : std_logic_vector((WB_DATA_WIDTH - 1) downto 0);
     signal gpio_data_write_value                  : std_logic_vector((WB_DATA_WIDTH - 1) downto 0);
     signal gpio_data_write_value_direction_change : std_logic_vector((WB_DATA_WIDTH - 1) downto 0);
-    signal gpio_data_read_value                   : std_logic_vector((WB_DATA_WIDTH - 1) downto 0);
+    signal ack                                    : std_logic;
+    signal write_enable_delay                     : std_logic;
+    signal read_enable_delay                      : std_logic;
+
     -- Sliced default constants
     constant DEFAULT_GPIO_DIRECTION : std_logic_vector(WB_DATA_WIDTH - 1 downto 0) :=
     DEFAULT_GPIO_DIRECTION_FULL(WB_DATA_WIDTH - 1 downto 0);
@@ -66,6 +69,14 @@ begin
         wait;
     end process;
 
+    process (i_clk)
+    begin
+        if rising_edge(i_clk) then
+            write_enable_delay <= i_ip_write_en;
+            read_enable_delay  <= i_ip_read_en;
+        end if;
+    end process;
+
     -- Mask i_ip_data to ensure only pins configured as output can be written to
     gpio_data_write_value                  <= i_ip_wdata and (not direction_register);
     gpio_data_write_value_direction_change <= gpio_data and (not i_ip_wdata);
@@ -76,7 +87,7 @@ begin
             if (i_reset = '1') then
                 direction_register <= DEFAULT_GPIO_DIRECTION;
                 gpio_data          <= DEFAULT_GPIO_OUTPUT;
-            elsif (i_ip_write_en = '1') then
+            elsif (write_enable_delay = '1') then
                 case TO_INTEGER(unsigned(i_ip_address)) is
                     when GPIO_DIRECTION_OFFSET =>
                         direction_register <= i_ip_wdata;
@@ -122,9 +133,8 @@ begin
         if rising_edge(i_clk) then
             if (i_reset = '1') then
                 o_ip_rdata <= (others => '0');
-                -- direction_register <= std_logic_vector(to_unsigned(DEFAULT_GPIO_DIRECTION, WB_DATA_WIDTH));
-                -- gpio_data          <= std_logic_vector(to_unsigned(DEFAULT_GPIO_OUTPUT, WB_DATA_WIDTH));
             elsif (i_ip_read_en = '1') then
+
                 case TO_INTEGER(unsigned(i_ip_address)) is
                     when GPIO_DIRECTION_OFFSET =>
                         o_ip_rdata <= direction_register;
@@ -133,19 +143,18 @@ begin
                     when others           =>
                         o_ip_rdata <= (others => '0');
                 end case;
-                -- else
-                -- o_ip_rdata <= (others => '0');
             end if;
         end if;
     end process;
 
+    ack <= i_ip_read_en or i_ip_write_en;
     process (i_clk)
     begin
         if rising_edge(i_clk) then
             if (i_reset = '1') then
                 o_ip_ack <= '0';
             else
-                o_ip_ack <= i_ip_read_en or i_ip_write_en;
+                o_ip_ack <= ack;
             end if;
         end if;
     end process;
