@@ -179,7 +179,6 @@ module wb_subordinate_interface #(
     begin
         for(int i = 0; i < SELECT_WIDTH; i++)
         begin
-            // sel_wb_dat
             if(i_wb_sel[i])
                 sel_wb_dat[i*WB_DATA_GRANULARITY +: WB_DATA_GRANULARITY] = i_wb_dat[i * WB_DATA_GRANULARITY +: WB_DATA_GRANULARITY];
             else
@@ -213,10 +212,8 @@ module wb_subordinate_interface #(
         endcase
     end
 
-    // assign o_ip_read_en = (i_wb_stb) & (i_wb_cyc) & (register_address >= 16'h20);
     assign o_ip_read_en = (i_wb_stb) & (i_wb_cyc) & (!i_wb_we) & (register_address >= 16'h20);
     assign o_ip_write_en = (i_wb_stb) & (i_wb_cyc) & (i_wb_we) & (register_address >= 16'h20);
-    // assign o_ip_wdata = (o_ip_write_en) ? sel_wb_dat : 0;
     assign o_ip_wdata = sel_wb_dat;
     assign ip_action = o_ip_write_en | o_ip_read_en;
 
@@ -261,13 +258,11 @@ module wb_subordinate_interface #(
                 endcase
             end
 
-    // assign o_wb_ack = 0;
     assign ack = (targeted_core & (outstanding_ack) & (!o_wb_stall) & ((!ip_action) | (ip_action & i_ip_ack)));
     always_ff @(posedge i_wb_clk)
         if(i_wb_rst)
             o_wb_ack <= 0;
         else
-            // o_wb_ack <= 0;
             o_wb_ack <= ack;
 
 `ifdef	FORMAL
